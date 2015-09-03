@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, date
 BASE_URL        =   "http://www.leboncoin.fr"
 STANDARD_SUFFIX =   "/annonces/offres"
 
+# TODO - Add remaining region choices in this dict
 REGIONS    =   {
                     'France'            :   '/occasions/',
                     'Paris'             :   '/ile_de_france/paris/',
@@ -70,7 +71,7 @@ def getDate(dateElement):
                     'juin'      :   6,
                     'juillet'   :   7,
                     'août'      :   8,
-                    'septembre' :   9,
+                    'sept'      :   9,
                     'octobre'   :   10,
                     'novembre'  :   11,
                     'décembre'  :   12

@@ -9,6 +9,13 @@ SETTINGS_FILE_PUSHBULLET_DEVICES_TAG    =   "Pushbullet Devices"
 
 
 class settingsManager():
+    
+    def init(self):
+        try:
+            with open(SETTINGS_FILE_PATH) as settingsFile:
+                self._data = json.load( settingsFile )
+        except FileNotFoundError as err:
+            self._data  =   None
 
     def savePushbulletSettings(self, listOfPushbulletAccounts):
         with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
