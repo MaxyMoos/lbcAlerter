@@ -100,6 +100,7 @@ class QPushbulletSettings_Window(QDialog):
         new_tokens = self.pbTokensInputText.text().split(';')
         self._pbInstances = []
         for token in new_tokens:
+            print("token = {}".format(token))
             self._pbInstances += [Pushbullet(token)]
         self.refreshQPushbulletAccountsShown()
 

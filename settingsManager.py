@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os.path
 import json
+from lbc_utils import *
 from pushbulletJsonEncoder import *
 
 
@@ -9,32 +10,28 @@ SETTINGS_FILE_PUSHBULLET_DEVICES_TAG    =   "Pushbullet Devices"
 
 
 class settingsManager():
-    
-    def init(self):
+
+    def __init__(self):
+        self._data  =   {}    #   Holds the contents of the settings file when opened on app launch
+
         try:
             with open(SETTINGS_FILE_PATH) as settingsFile:
                 self._data = json.load( settingsFile )
         except FileNotFoundError as err:
-            self._data  =   None
+            pass # self._data is already initialized
 
     def savePushbulletSettings(self, listOfPushbulletAccounts):
-        with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
-            settingsFile.write( json.dumps( {"Pushbullet accounts":listOfPushbulletAccounts}, cls=PushbulletJSONEncoder, indent=4, sort_keys=True ) )
-
-    def parseSettingsFile(self):
-        with open(SETTINGS_FILE_PATH, mode="r") as settingsFile:
-            accounts = []
-
-            data = json.load( settingsFile )
-            for element in data["Pushbullet accounts"]:
-                accounts += [ Pushbullet(JSON=element) ]
-            return { 'Pushbullet':accounts }
+        if len(listOfPushbulletAccounts) > 0:
+            with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
+                settingsFile.write( json.dumps( {"Pushbullet accounts":listOfPushbulletAccounts}, cls=PushbulletJSONEncoder, indent=4, sort_keys=True ) )
 
     def getPushbulletAccounts(self):
         accounts = []
 
-        with open(SETTINGS_FILE_PATH, mode="r") as settingsFile:
-            data = json.load( settingsFile )
-            for element in data["Pushbullet accounts"]:
+        try:
+            for element in self._data["Pushbullet accounts"]:
+                log(0, "Loading account from settings : {}".format(element) )
                 accounts += [ Pushbullet(JSON=element) ]
+        except KeyError:
+            pass # No accounts available in settings file
         return accounts
