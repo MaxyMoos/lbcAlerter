@@ -1,7 +1,6 @@
 import json
 import requests
 from lbc_utils import log
-from debugTool.debugTool import debug_trace
 
 
 # @brief:   This class represents a Pushbullet account (i.e : one PB token), with all its attached devices
@@ -91,7 +90,6 @@ class Pushbullet():
                 response    =   self.curSession.get(self.PB_URL_DEVICES)
                 if ( response.status_code != 200 ):
                     log(1, "Error during getDevices request - HTTP " + str(response.status_code) )
-                    debug_trace()
                     return None
                 else:
                     for device in response.json()['devices']:
