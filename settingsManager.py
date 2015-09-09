@@ -20,10 +20,12 @@ class settingsManager():
         except FileNotFoundError as err:
             pass # self._data is already initialized
 
+
     def savePushbulletSettings(self, listOfPushbulletAccounts):
         if len(listOfPushbulletAccounts) > 0:
             with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
                 settingsFile.write( json.dumps( {"Pushbullet accounts":listOfPushbulletAccounts}, cls=PushbulletJSONEncoder, indent=4, sort_keys=True ) )
+
 
     def getPushbulletAccounts(self):
         accounts = []

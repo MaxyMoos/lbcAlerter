@@ -109,7 +109,7 @@ class MainApplication(QObject):
         def run(self):
             import os
 
-            self.dbConn = db.sqlite3.connect(db.DATABASE_NAME) # Needed as the sqlite rule is 1 db connection per Thread
+            self.dbConn = db.sqlite3.connect(db.DATABASE_NAME, uri=True) # Needed as the sqlite rule is 1 db connection per Thread
             db.insertImagesIntoDatabase(self.dbConn, self.lbcItem)
             self.dbConn.close()
 

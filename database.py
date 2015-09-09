@@ -5,8 +5,8 @@ import sqlite3
 from lbc_utils import *
 from lbc_item import lbc_item
 
-# TODO - Use the new URI parameter to sqlite3 init so that several threads can share the same db in memory !
-DATABASE_NAME       =   "file:tmp.db?type=memory?cache=shared"
+
+DATABASE_NAME       =   "file:tmp.db?mode=memory&cache=shared"
 TABLE_NAME          =   "curTable"
 IMG_TABLE_NAME      =   "curImgTable"
 DB_CONNECTION       =   None
@@ -16,7 +16,7 @@ DEFAULT_MAX_RESULTS =   5
 
 def openDatabase():
     global DB_CONNECTION
-    DB_CONNECTION   =   sqlite3.connect(DATABASE_NAME)
+    DB_CONNECTION   =   sqlite3.connect(DATABASE_NAME, uri=True)
     createDatabaseIfNeeded()
 
 def closeDatabase():
