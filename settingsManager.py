@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
+
 import os.path
 import json
 from lbc_utils import *
 from pushbulletJsonEncoder import *
 
+from enum import Enum
 
-SETTINGS_FILE_PATH                      =   "./UserSettings.json"
-SETTINGS_FILE_PUSHBULLET_DEVICES_TAG    =   "Pushbullet Devices"
+SETTINGS_FILE_PATH  =   "./UserSettings.json"
+
+TAG_SEARCH_GLOBAL   =   "Search"
+TAG_SEARCH_QUERY    =   "Query"
+TAG_SEARCH_REGION   =   "Region"
+TAG_PUSHBULLET_ACCOUNTS  =   "Pushbullet accounts"
 
 
 class settingsManager():
@@ -21,17 +27,32 @@ class settingsManager():
             pass # self._data is already initialized
 
 
-    def savePushbulletSettings(self, listOfPushbulletAccounts):
-        if len(listOfPushbulletAccounts) > 0:
-            with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
-                settingsFile.write( json.dumps( {"Pushbullet accounts":listOfPushbulletAccounts}, cls=PushbulletJSONEncoder, indent=4, sort_keys=True ) )
+    def saveSettings(self, searchTerm, searchRegion, listOfPushbulletAccounts):
+        globalSettings =    {
+                                TAG_SEARCH_GLOBAL : {
+                                                        TAG_SEARCH_QUERY:searchTerm,
+                                                        TAG_SEARCH_REGION:searchRegion
+                                                    },
+
+                                TAG_PUSHBULLET_ACCOUNTS:listOfPushbulletAccounts
+                            }
+        with open(SETTINGS_FILE_PATH, mode="w") as settingsFile:
+            settingsFile.write( json.dumps(globalSettings, cls=PushbulletJSONEncoder, indent=4, sort_keys=True) )
+
+
+    def getSearchSettings(self):
+        try:
+            searchSettings  =   self._data[TAG_SEARCH_GLOBAL]
+            return searchSettings[TAG_SEARCH_QUERY], searchSettings[TAG_SEARCH_REGION]
+        except KeyError:
+            pass # Settings file does not exist yet. Doesn't matter
 
 
     def getPushbulletAccounts(self):
         accounts = []
 
         try:
-            for element in self._data["Pushbullet accounts"]:
+            for element in self._data[TAG_PUSHBULLET_ACCOUNTS]:
                 log(0, "Loading account from settings : {}".format(element) )
                 accounts += [ Pushbullet(JSON=element) ]
         except KeyError:

@@ -53,7 +53,7 @@ class MainApplication(QObject):
         self._pushbulletInstances = []
         self._settingsManager   =   settings.settingsManager()
 
-        # Load settings on startup if available
+        # Load Pushbullet settings on startup if available
         self.setPushbulletInstances( self._settingsManager.getPushbulletAccounts() )
 
 
@@ -139,9 +139,9 @@ class MainApplication(QObject):
         self.updateItemsThread.restart()
 
     def onClosingSettingsWindow(self, listOfPushbulletAccounts):
-        # Callback - We set the active PB accounts and save them in settings file
+        # Callback - We set the active PB accounts and save current state in settings file
         self.setPushbulletInstances(listOfPushbulletAccounts)
-        self._settingsManager.savePushbulletSettings(listOfPushbulletAccounts)
+        self._settingsManager.saveSettings(self.mainWin.queryInput.text(), self.mainWin.getRegionValueFromCombobox(), listOfPushbulletAccounts )
 
 
     # Application main loop. Everything starts and ends here
@@ -158,6 +158,14 @@ class MainApplication(QObject):
         # Initialize "Region" combobox with values
         for region in sorted( parser.REGIONS.keys() ):
             self.mainWin.addItemToRegionCombobox(region)
+
+        # Init search from UserSettings config file if available
+        searchQuery, searchRegion = self._settingsManager.getSearchSettings()
+        if searchQuery != "" and searchRegion != "":
+            parser.setRegion(searchRegion)
+            parser.setSearchTerm(searchQuery)
+            self.mainWin.queryInput.setText(searchQuery)
+            self.onSubmitNewSearchString()
 
         # Connect signals & slots
         self.mainWin.startSearchButton.clicked.connect( self.onSubmitNewSearchString )

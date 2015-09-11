@@ -17,3 +17,6 @@ def log(dbgLevel, logMsg):
 			pass
 		else:
 			print(getCurDateTimeString() + "\t" + str(dbgLevel) + "\t" + "{}".format(logMsg))
+
+def debugLog(logMsg):
+    print(logMsg)
