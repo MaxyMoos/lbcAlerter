@@ -45,7 +45,7 @@ class settingsManager():
             searchSettings  =   self._data[TAG_SEARCH_GLOBAL]
             return searchSettings[TAG_SEARCH_QUERY], searchSettings[TAG_SEARCH_REGION]
         except KeyError:
-            pass # Settings file does not exist yet. Doesn't matter
+            return "", "" # Settings file does not exist yet. Doesn't matter
 
 
     def getPushbulletAccounts(self):
