@@ -26,6 +26,7 @@ def cleanState():
     global displayedItems
     displayedItems = None
 
+
 def refreshMain():
     global displayedItems
 

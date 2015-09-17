@@ -97,6 +97,41 @@ def getDate(dateElement):
 
         return datetime(datetime.today().year, month, day, hour=hour, minute=minutes)
 
+
+def dev_parseDivElement(elem):
+    title   =   elem.find( "div", attrs={'class':'detail'} ).h2.string.strip()
+    price   =   elem.find( "div", attrs={'class':'price'} )
+    if price:
+        price = price.string.strip()
+    date    =   getDate( elem.find("div", attrs={'class':'date'}) )
+    url     =   elem.parent['href']
+    images  =   []
+
+    itemID_regex = re.search("[0-9]+(?=\.htm)", url)
+    if itemID_regex:
+        itemID = str( itemID_regex.group() )
+    else:
+        # TODO - Throw an error instead of this
+        itemID = -1
+    return lbc_item( itemId=itemID, title=title, price=price, date=date, url=url, images=images )
+
+
+def dev_getItemsFromWebpage( searchQuery="", searchRegion="" ):
+    results     =   []
+    url         =   BASE_URL + STANDARD_SUFFIX + REGIONS[searchRegion] + SEARCH_PARAMS + searchQuery
+    parsedPage  =   getSoup(url)
+
+    if parsedPage:
+        divElements     =   parsedPage.body.find_all( 'div', attrs={'class':'lbc'} )
+        for divElem in divElements:
+            try:
+                item = dev_parseDivElement(divElem)
+                if item:
+                    results += [item]
+            except Exception as e:
+                log( 1, "Error while parsing the following object:\n{}\nError: {}".format(title, e.args) )
+
+
 def getAndParseResultsPage():
     import time
     start_time = time.time()
