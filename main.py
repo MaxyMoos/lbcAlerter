@@ -13,35 +13,6 @@ from threading import Thread
 
 
 mainApp         = None
-displayedItems  = None
-
-
-def onStart():
-    db.openDatabase()
-
-def onClose():
-    db.closeDatabase()
-
-def cleanState():
-    global displayedItems
-    displayedItems = None
-
-
-def refreshMain():
-    global displayedItems
-
-    parser.setRegion( mainApp.mainWin.getRegionValueFromCombobox() )
-    newItems = parser.getAndParseResultsPage()
-    db.insertItemsIntoDatabases(*newItems)      # This method handles duplicates
-    displayedItems = newItems[0:NB_SHOWN_ITEMS]
-
-    curItems    =   mainApp.mainWin.getItems()
-    itemsToNotify = [item for item in displayedItems if item not in curItems]
-    log( 3, "itemsToNotify = \n{}".format([str(item) + "\n" for item in itemsToNotify]) )
-    mainApp.sendPushbulletNotifications(itemsToNotify)
-    mainApp.mainWin.updateItems( *(displayedItems) )
-    mainApp.mainWin.updateStatusBar( "Last updated at " + getCurTimeString() + " - " + str(len(itemsToNotify)) + " new items added!")
-
 
 
 # @Brief : MainApplication is the class used to setup & manage the application main loop
@@ -51,11 +22,19 @@ class MainApplication(QObject):
 
     def __init__(self):
         super(MainApplication, self).__init__()
-        self._pushbulletInstances = []
-        self._settingsManager   =   settings.settingsManager()
-
+        self._curSearchQuery        =   ""
+        self._curSearchRegion       =   ""
+        self._displayedItems        =   []
+        self._pushbulletInstances   =   []
+        self._settingsManager       =   settings.settingsManager()
         # Load Pushbullet settings on startup if available
         self.setPushbulletInstances( self._settingsManager.getPushbulletAccounts() )
+
+    def onStart(self):
+        db.openDatabase()
+
+    def onClose(self):
+        db.closeDatabase()
 
 
     # ******************************************
@@ -74,14 +53,13 @@ class MainApplication(QObject):
 
         def run(self):
             try:
-                refreshMain()
+                mainApp.refreshMainWindow()
             except Exception as e:
                 log(0, e.args)
             finally:
                 getImagesThread = MainApplication.t_getImages()
                 getImagesThread.start()
                 self.timer.start(60000)
-
 
     # ***************************************
     # Thread class to manage images retrieval
@@ -92,12 +70,11 @@ class MainApplication(QObject):
             self.writeToDBThreads = []
 
         def run(self):
-            for lbcItem in displayedItems:
+            for lbcItem in mainApp._displayedItems:
                 if len(lbcItem.images) == 0:
                     lbcItem.images = parser.getAndParseItemPage(lbcItem.url)
                     self.writeToDBThreads += [MainApplication.t_saveImagesToDB(lbcItem)]
                     self.writeToDBThreads[-1].start()
-
 
     # *****************************************************
     # Thread class to manage images recording into database
@@ -133,16 +110,30 @@ class MainApplication(QObject):
         return self._settingsManager
 
     def onSubmitNewSearchString(self):
-        searchString = self.mainWin.queryInput.text()
-        log(2, "New search string = {}".format(searchString))
-        parser.setSearchTerm(searchString)
-        parser.build_full_url( self.mainWin.getRegionValueFromCombobox() ) # Hardcoded for now
+        self._curSearchQuery = self.mainWin.queryInput.text()
+        log( 2, "New search string = {}".format(self._curSearchQuery) )
         self.updateItemsThread.restart()
+
+    def onChangingRegion(self, newRegionValueIndex):
+        self._curSearchRegion = sorted(parser.REGIONS.keys())[newRegionValueIndex]
+        log( 2, "New region value : {}".format(self._curSearchRegion) )
 
     def onClosingSettingsWindow(self, listOfPushbulletAccounts):
         # Callback - We set the active PB accounts and save current state in settings file
         self.setPushbulletInstances(listOfPushbulletAccounts)
         self._settingsManager.saveSettings(self.mainWin.queryInput.text(), self.mainWin.getRegionValueFromCombobox(), listOfPushbulletAccounts )
+
+    def refreshMainWindow(self):
+        newItems = parser.getItemsFromWebpage( self._curSearchQuery, self._curSearchRegion )
+        db.insertItemsIntoDatabases(*newItems)      # This method handles duplicates
+        self._displayedItems = newItems[0:NB_SHOWN_ITEMS]
+
+        curItems    =   mainApp.mainWin.getItems()
+        itemsToNotify = [item for item in self._displayedItems if item not in curItems]
+        log( 3, "itemsToNotify = \n{}".format([str(item) + "\n" for item in itemsToNotify]) )
+        mainApp.sendPushbulletNotifications(itemsToNotify)
+        mainApp.mainWin.updateItems( *(self._displayedItems) )
+        mainApp.mainWin.updateStatusBar( "Last updated at " + getCurTimeString() + " - " + str(len(itemsToNotify)) + " new items added!")
 
 
     # Application main loop. Everything starts and ends here
@@ -150,7 +141,7 @@ class MainApplication(QObject):
         app = QApplication(sys.argv)
 
         # Initialization of database
-        onStart()
+        self.onStart()
 
         # Let's get some handles
         self.mainWin = MainWindow(self)
@@ -163,10 +154,13 @@ class MainApplication(QObject):
         # Init search from UserSettings config file if available
         searchQuery, searchRegion = self._settingsManager.getSearchSettings()
         if searchQuery != "" and searchRegion != "":
-            parser.setRegion(searchRegion)
-            parser.setSearchTerm(searchQuery)
+            self._curSearchQuery = searchQuery
+            self._curSearchRegion = searchRegion
             self.mainWin.queryInput.setText(searchQuery)
-            self.onSubmitNewSearchString()
+            timer = QTimer()
+            timer.setSingleShot(True)
+            timer.timeout.connect( self.onSubmitNewSearchString )
+            timer.start(1000)
 
         # Connect signals & slots
         self.mainWin.startSearchButton.clicked.connect( self.onSubmitNewSearchString )
@@ -179,7 +173,7 @@ class MainApplication(QObject):
 
         app.exec_()
 
-        onClose()
+        self.onClose()
         sys.exit()
 
 

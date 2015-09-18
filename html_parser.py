@@ -27,20 +27,6 @@ REGIONS    =   {
 
 SEARCH_PARAMS   =   "?f=a&th=0&q=" # th=0 disables thumbnails so the html response is as small as possible
 
-SEARCH_TERM     =   ""
-CUR_REGION      =   ""
-FULL_URL        =   ""
-
-
-def setSearchTerm(newSearchString):
-    global SEARCH_TERM
-    SEARCH_TERM = newSearchString.replace(' ', '+')
-    log(1, "setSearchTerm triggered with new search : " + newSearchString)
-
-def setRegion(newRegion):
-    global CUR_REGION
-    if newRegion in REGIONS.keys():
-        CUR_REGION = newRegion
 
 def getSoup(url):
     try:
@@ -50,14 +36,6 @@ def getSoup(url):
         return []
     return BeautifulSoup(f)
 
-def build_full_url(region):
-    global FULL_URL
-
-    if region in REGIONS.keys():
-        FULL_URL = BASE_URL + STANDARD_SUFFIX + REGIONS[region] + SEARCH_PARAMS + SEARCH_TERM
-        log(1, "FULL_URL = {}".format(FULL_URL))
-    else:
-        raise ValueError("region value (\"" + region + "\") is not good or supported")
 
 # @Brief: Extracts date from an item HTML block
 # @Return_Format: datetime instance
@@ -98,7 +76,7 @@ def getDate(dateElement):
         return datetime(datetime.today().year, month, day, hour=hour, minute=minutes)
 
 
-def dev_parseDivElement(elem):
+def parseDivElement(elem):
     title   =   elem.find( "div", attrs={'class':'detail'} ).h2.string.strip()
     price   =   elem.find( "div", attrs={'class':'price'} )
     if price:
@@ -111,67 +89,26 @@ def dev_parseDivElement(elem):
     if itemID_regex:
         itemID = str( itemID_regex.group() )
     else:
-        # TODO - Throw an error instead of this
+        # TODO - Raise an error instead of this
         itemID = -1
     return lbc_item( itemId=itemID, title=title, price=price, date=date, url=url, images=images )
 
 
-def dev_getItemsFromWebpage( searchQuery="", searchRegion="" ):
+def getItemsFromWebpage( searchQuery="", searchRegion="" ):
     results     =   []
-    url         =   BASE_URL + STANDARD_SUFFIX + REGIONS[searchRegion] + SEARCH_PARAMS + searchQuery
+    url         =   BASE_URL + STANDARD_SUFFIX + REGIONS[searchRegion] + SEARCH_PARAMS + searchQuery.replace(' ','+')
     parsedPage  =   getSoup(url)
-
     if parsedPage:
         divElements     =   parsedPage.body.find_all( 'div', attrs={'class':'lbc'} )
         for divElem in divElements:
             try:
-                item = dev_parseDivElement(divElem)
+                item = parseDivElement(divElem)
                 if item:
                     results += [item]
             except Exception as e:
                 log( 1, "Error while parsing the following object:\n{}\nError: {}".format(title, e.args) )
-
-
-def getAndParseResultsPage():
-    import time
-    start_time = time.time()
-    soup = getSoup(FULL_URL)
-    log(1, "Updated search results from URL : " + FULL_URL)
-
-    results = []
-
-    if soup:
-        x = soup.body.find_all('div', attrs={'class': 'lbc'})
-
-        for elem in x:
-            try:
-                title   =   elem.find("div", attrs={'class':'detail'}).h2.string.strip()
-                price   =   elem.find("div", attrs={'class':'price'})
-                if price:   price = price.string.strip()
-                date    =   getDate(elem.find("div", attrs={'class':'date'}))
-                url     =   elem.parent['href']
-                images  =   [] # getAndParseItemPage(url)
-
-                id_regex = re.search("[0-9]+(?=\.htm)", url)
-                if id_regex: itemId = str(id_regex.group())
-                else: itemId = -1   # TODO - Throw error instead of this
-
-                results += [lbc_item(itemId=itemId, title=title, price=price, date=date, url=url, images=images)]
-
-                log(3, "ID = {}".format(itemId))
-                log(3, "title = {}".format(title) )
-                log(3, "date = {}".format(date))
-                log(3, "price = {}".format(price) )
-                log(3, "{}".format(images) )
-                log(3, "************************" )
-                log(3, "\n")
-
-            except Exception as e:
-                log( 1, "Error while parsing the following object:\n{}\nError: {}".format(title, e.args) )
-
-    elapsed_time = time.time() - start_time
-    log(2, "getAndParseResultsPage - elapsed_time = {}s".format(elapsed_time))
     return results
+
 
 def getAndParseItemPage(itemURL):
     images = []

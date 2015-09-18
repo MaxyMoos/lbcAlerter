@@ -82,6 +82,7 @@ class MainWindow(QWidget):
         self.statusBar.setSizeGripEnabled(False)
         self.statusBar.setFixedHeight( self.statusBar.minimumHeight() )
 
+        self._regionCombobox.currentIndexChanged.connect( self.mainAppHandle.onChangingRegion )
         self._settingsButton.clicked.connect( self.showSettingsWindow )
 
 
