@@ -70,19 +70,22 @@ class MainApplication(QObject):
             self.writeToDBThreads = []
 
         def run(self):
-            for lbcItem in mainApp._displayedItems:
-                if len(lbcItem.images) == 0:
-                    lbcItem.images = parser.getAndParseItemPage(lbcItem.url)
-                    self.writeToDBThreads += [MainApplication.t_saveImagesToDB(lbcItem)]
+            for itemWidget in mainApp.mainWin.itemPanelWidgets:
+                curItem = itemWidget.getItem()
+                if len(curItem.images) == 0:
+                    curItem.images = parser.getAndParseItemPage(curItem.url)
+                    self.writeToDBThreads += [MainApplication.t_saveImagesToDB(itemWidget)]
                     self.writeToDBThreads[-1].start()
+
 
     # *****************************************************
     # Thread class to manage images recording into database
     # *****************************************************
     class t_saveImagesToDB(Thread):
-        def __init__(self, lbcItem):
+        def __init__(self, itemWidget):
             super(MainApplication.t_saveImagesToDB, self).__init__()
-            self.lbcItem = lbcItem
+            self.itemWidget = itemWidget
+            self.lbcItem = itemWidget.getItem()
 
         def run(self):
             import os
@@ -90,6 +93,8 @@ class MainApplication(QObject):
             self.dbConn = db.sqlite3.connect(db.DATABASE_NAME, uri=True) # Needed as the sqlite rule is 1 db connection per Thread
             db.insertImagesIntoDatabase(self.dbConn, self.lbcItem)
             self.dbConn.close()
+            # Update the widget to display/enable image button
+            self.itemWidget.setImageButtonVisibility(True)
 
 
     def setPushbulletInstances(self, pbInstances):

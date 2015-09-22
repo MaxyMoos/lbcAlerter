@@ -49,3 +49,6 @@ class lbc_item():
 
     def getURL(self):
         return self.url
+
+    def getImages(self):
+        return self.images

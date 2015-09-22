@@ -3,8 +3,11 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from lbc_utils import *
+
 from qtInterface.qt_pushbullet import *
 from qtInterface.qt_utilclasses import *
+from qtInterface.imageWindow import *
+
 from datetime import time
 
 
@@ -13,12 +16,39 @@ NB_SHOWN_ITEMS  =   6
 
 # ****************************
 
+class Hider(QObject):
+    """
+    Hides a widget by blocking its paint event. This is useful if a
+    widget is in a layout that you do not want to change when the
+    widget is hidden.
+    """
+    def __init__(self, parent=None):
+        super(Hider, self).__init__(parent)
+
+    def eventFilter(self, obj, ev):
+        return ev.type() == QEvent.Paint
+
+    def hide(self, widget):
+        widget.installEventFilter(self)
+        widget.update()
+
+    def unhide(self, widget):
+        widget.removeEventFilter(self)
+        widget.update()
+
+    def hideWidget(self, sender):
+        if sender.isWidgetType():
+            self.hide(sender)
+
+
 class ItemPanel(QWidget):
 
     def __init__(self, lbcItem=None):
         super(ItemPanel, self).__init__()
-        self._item  =   lbcItem
-        self.layout =   QGridLayout()
+        self._hider =   Hider()
+
+        self._item      =   lbcItem
+        self.layout     =   QGridLayout()
 
         titleStr    =   ""
         dateStr     =   ""
@@ -33,17 +63,26 @@ class ItemPanel(QWidget):
         self.itemTitle  =   QLabel(titleStr)
         self.itemDate   =   QLabel(dateStr)
         self.itemPrice  =   QLabel(priceStr)
+        self._imagesBtn =   QPushButton("Images", self)
 
         # Widgets setup
         self.itemTitle.setTextFormat(Qt.RichText)
         self.itemTitle.setOpenExternalLinks(True)
+        self._hider.hide(self._imagesBtn) # Button only shown when images are available
+        self._imagesBtn.clicked.connect( lambda: self.openImageDialog(self._item) )
 
         # Add to layout
         self.layout.addWidget(self.itemTitle)
         self.layout.addWidget(self.itemDate)
         self.layout.addWidget(self.itemPrice)
+        self.layout.addWidget(self._imagesBtn)
 
         self.setLayout(self.layout)
+
+    def openImageDialog(self, lbcItem):
+        imgWin = None
+        imgWin = QImageWindow(lbcItem)
+        imgWin.show()
 
     def getItem(self):
         return self._item
@@ -54,6 +93,10 @@ class ItemPanel(QWidget):
         self.itemDate.setText(lbcItem.get_date_string())
         self.itemPrice.setText(lbcItem.price)
 
+    def setImageButtonVisibility(self, mustBeVisible):
+        if mustBeVisible:
+            self._hider.unhide(self._imagesBtn)
+
 
 class SearchButton(QPushButton):
     def __init__(self, string):
@@ -61,8 +104,6 @@ class SearchButton(QPushButton):
 
 
 class MainWindow(QWidget):
-
-
     def __init__(self, mainApp):
         super(MainWindow, self).__init__()
         self.mainAppHandle  =   mainApp
