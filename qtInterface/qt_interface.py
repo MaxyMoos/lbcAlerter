@@ -42,14 +42,12 @@ class Hider(QObject):
 
 
 class ItemPanel(QWidget):
-
     def __init__(self, lbcItem=None):
         super(ItemPanel, self).__init__()
         self._hider =   Hider()
 
         self._item      =   lbcItem
         self.layout     =   QGridLayout()
-
         titleStr    =   ""
         dateStr     =   ""
         priceStr    =   ""
@@ -80,9 +78,9 @@ class ItemPanel(QWidget):
         self.setLayout(self.layout)
 
     def openImageDialog(self, lbcItem):
-        imgWin = None
-        imgWin = QImageWindow(lbcItem)
-        imgWin.show()
+        self.imgWin = None
+        self.imgWin = QImageWindow(lbcItem)
+        self.imgWin.show()
 
     def getItem(self):
         return self._item
@@ -125,7 +123,6 @@ class MainWindow(QWidget):
 
         self._regionCombobox.currentIndexChanged.connect( self.mainAppHandle.onChangingRegion )
         self._settingsButton.clicked.connect( self.showSettingsWindow )
-
 
         # Add widgets to layout
         self.layout.addWidget(self.queryInput)

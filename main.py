@@ -9,6 +9,8 @@ from qtInterface.qt_utilclasses import *
 from lbc_utils import *
 
 import sys
+import requests
+import base64
 from threading import Thread
 
 
@@ -73,7 +75,10 @@ class MainApplication(QObject):
             for itemWidget in mainApp.mainWin.itemPanelWidgets:
                 curItem = itemWidget.getItem()
                 if len(curItem.images) == 0:
-                    curItem.images = parser.getAndParseItemPage(curItem.url)
+                    imgURLs = parser.getAndParseItemPage(curItem.url)
+                    for url in imgURLs:
+                        imgFile = requests.get(url)
+                        curItem.images += [base64.b16encode(imgFile.content)]
                     self.writeToDBThreads += [MainApplication.t_saveImagesToDB(itemWidget)]
                     self.writeToDBThreads[-1].start()
 
@@ -95,7 +100,6 @@ class MainApplication(QObject):
             self.dbConn.close()
             # Update the widget to display/enable image button
             self.itemWidget.setImageButtonVisibility(True)
-
 
     def setPushbulletInstances(self, pbInstances):
         self._pushbulletInstances   =   pbInstances

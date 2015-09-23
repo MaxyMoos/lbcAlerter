@@ -53,7 +53,6 @@ class settingsManager():
 
         try:
             for element in self._data[TAG_PUSHBULLET_ACCOUNTS]:
-                log(0, "Loading account from settings : {}".format(element) )
                 accounts += [ Pushbullet(JSON=element) ]
         except KeyError:
             pass # No accounts available in settings file

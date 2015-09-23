@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import date, timedelta
+import base64
 
 
 class lbc_item():
@@ -50,5 +51,5 @@ class lbc_item():
     def getURL(self):
         return self.url
 
-    def getImages(self):
-        return self.images
+    def getImagesAsJPEG(self):
+        return [base64.b16decode(x) for x in self.images]
