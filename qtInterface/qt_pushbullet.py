@@ -39,7 +39,13 @@ class QPushbulletAccount(QWidget):
         self._pbInstance    =   pbInstance
         self._layout        =   QGridLayout()
         self._accountLabel  =   QLabel( "Pushbullet account : " + self._pbInstance.getToken() )
+        self._accountLabel.setStyleSheet("QLabel    {                               \
+                                                        background-color : green;   \
+                                                        color: white                 \
+                                                    }")
         self._devices       =   []
+
+        self._layout.addWidget(self._accountLabel)
 
         self._pbInstance.getDevices()
         for device in self._pbInstance.devices:

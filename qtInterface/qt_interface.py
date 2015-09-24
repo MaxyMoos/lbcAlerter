@@ -104,15 +104,15 @@ class SearchButton(QPushButton):
 class MainWindow(QWidget):
     def __init__(self, mainApp):
         super(MainWindow, self).__init__()
-        self.mainAppHandle  =   mainApp
-        self.layout = QGridLayout()
-        self.itemPanelWidgets = []
+        self.mainAppHandle      =   mainApp
+        self.layout             =   QGridLayout()
+        self.itemPanelWidgets   =   []
 
         for i in range(0, NB_SHOWN_ITEMS):
             self.itemPanelWidgets += [ItemPanel()]
 
         # Widgets
-        self.queryInput = SearchLineEdit("Recherche:")
+        self.queryInput         =   SearchLineEdit("Recherche:")
         self._regionCombobox    =   QComboBox()
         self.startSearchButton  =   SearchButton("Rechercher")
         self._settingsButton    =   QPushButton("Settings", self)

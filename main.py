@@ -74,7 +74,7 @@ class MainApplication(QObject):
         def run(self):
             for itemWidget in mainApp.mainWin.itemPanelWidgets:
                 curItem = itemWidget.getItem()
-                if len(curItem.images) == 0:
+                if curItem and len(curItem.images) == 0:
                     imgURLs = parser.getAndParseItemPage(curItem.url)
                     for url in imgURLs:
                         imgFile = requests.get(url)
