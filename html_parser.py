@@ -99,7 +99,6 @@ def convertSpecialCharToHTML(text):
     for key, value in codepoint2name.items():
         if chr(key) in text:
             resultStr = text.replace(chr(key), "&" + value + ";")
-            debugLog("Replaced a '" + chr(key) + "' character in search query: " + text)
     return resultStr
 
 def removeAccentuatedCharacters(text):

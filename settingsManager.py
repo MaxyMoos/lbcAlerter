@@ -16,7 +16,6 @@ TAG_PUSHBULLET_ACCOUNTS  =   "Pushbullet accounts"
 
 
 class settingsManager():
-
     def __init__(self):
         self._data  =   {}    #   Holds the contents of the settings file when opened on app launch
         try:

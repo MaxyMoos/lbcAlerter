@@ -183,12 +183,6 @@ class MainApplication(QObject):
             timer.timeout.connect( self.onSubmitNewSearchString )
             timer.start(1000)
 
-        # Connect signals & slots
-        """
-        self.mainWin.startSearchButton.clicked.connect( self.onSubmitNewSearchString )
-        self.mainWin.queryInput.keyEnterPressed.connect( self.onSubmitNewSearchString )
-        """
-
         self.mainWin.setWindowTitle("LeBonCoin alerter")
         self.mainWin.show()
 
