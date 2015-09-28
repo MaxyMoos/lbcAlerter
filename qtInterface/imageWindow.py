@@ -15,8 +15,10 @@ class QImageNavButtons(QWidget):
         self.setLayout(self._layout)
 
 class QImageWindow(QDialog):
-    def __init__(self, lbcItem):
-        super(QImageWindow, self).__init__()
+    closeWinEvent = pyqtSignal()
+
+    def __init__(self, lbcItem, parent=None):
+        super(QImageWindow, self).__init__(parent)
         self.displayedImgIndex  =   0
         self._item          =   lbcItem
         self._layout        =   QVBoxLayout()
@@ -28,6 +30,7 @@ class QImageWindow(QDialog):
 
         self._prevBtn.clicked.connect( lambda: self.showNextOrPrevImage(-1) )
         self._nextBtn.clicked.connect( lambda: self.showNextOrPrevImage(1) )
+        self.closeWinEvent.connect( self.parentWidget().onImageDialogClosed )
 
         # Set up the pixmap by loading first available image
         self.pixmapImg.loadFromData( self._item.getImagesAsJPEG()[0] )
@@ -48,3 +51,7 @@ class QImageWindow(QDialog):
     def showNextOrPrevImage(self, nextOrPrev):
         self.displayedImgIndex = (self.displayedImgIndex + nextOrPrev) % len(self._item.images) # nextOrPrev value is -1 or 1
         self.setAndRefreshPixmapWithImage( self._item.getImagesAsJPEG()[self.displayedImgIndex] )
+
+    def closeEvent(self, event):
+        self.closeWinEvent.emit()
+        event.accept()

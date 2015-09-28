@@ -19,7 +19,6 @@ class settingsManager():
 
     def __init__(self):
         self._data  =   {}    #   Holds the contents of the settings file when opened on app launch
-
         try:
             with open(SETTINGS_FILE_PATH) as settingsFile:
                 self._data = json.load( settingsFile )

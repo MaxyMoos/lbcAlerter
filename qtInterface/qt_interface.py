@@ -3,12 +3,14 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from lbc_utils import *
+from lbc_item import *
 
 from qtInterface.qt_pushbullet import *
 from qtInterface.qt_utilclasses import *
 from qtInterface.imageWindow import *
 
 from datetime import time
+from itertools import zip_longest
 
 
 NB_SHOWN_ITEMS  =   6
@@ -47,6 +49,7 @@ class ItemPanel(QWidget):
         self._hider =   Hider()
 
         self._item      =   lbcItem
+        self.imgWin     =   None
         self.layout     =   QGridLayout()
         titleStr    =   ""
         dateStr     =   ""
@@ -78,21 +81,37 @@ class ItemPanel(QWidget):
         self.setLayout(self.layout)
 
     def openImageDialog(self, lbcItem):
+        if self._imagesBtn.isEnabled():
+            if self.imgWin is None:
+                self.imgWin = QImageWindow(lbcItem, self)
+                self.imgWin.show()
+            else:
+                # if the user tries to open a second popup of the same item we just focus the existing one
+                debugLog("Setting focus on imgWin")
+                self.imgWin.setFocus()
+
+    def onImageDialogClosed(self):
         self.imgWin = None
-        self.imgWin = QImageWindow(lbcItem)
-        self.imgWin.show()
 
     def getItem(self):
         return self._item
 
-    def updateFromItem(self, lbcItem):
+    def updateFromItem(self, lbcItem=None):
         self._item = lbcItem
-        self.itemTitle.setText("<a href=\"" + lbcItem.url + "\">" + lbcItem.title + "</a>")
-        self.itemDate.setText(lbcItem.get_date_string())
-        self.itemPrice.setText(lbcItem.price)
+        if self._item is None:
+            self.itemTitle.setText("")
+            self.itemDate.setText("")
+            self.itemPrice.setText("")
+        else:
+            self.itemTitle.setText("<a href=\"" + lbcItem.url + "\">" + lbcItem.title + "</a>")
+            self.itemDate.setText(lbcItem.get_date_string())
+            self.itemPrice.setText(lbcItem.price)
+        self._imagesBtn.setEnabled(False)
+        self._hider.hide(self._imagesBtn)
 
     def setImageButtonVisibility(self, mustBeVisible):
         if mustBeVisible:
+            self._imagesBtn.setEnabled(True)
             self._hider.unhide(self._imagesBtn)
 
 
@@ -101,7 +120,7 @@ class SearchButton(QPushButton):
         super(SearchButton, self).__init__(string)
 
 
-class MainWindow(QWidget):
+class MainWindow(QDialog):
     def __init__(self, mainApp):
         super(MainWindow, self).__init__()
         self.mainAppHandle      =   mainApp
@@ -121,6 +140,8 @@ class MainWindow(QWidget):
         self.statusBar.setSizeGripEnabled(False)
         self.statusBar.setFixedHeight( self.statusBar.minimumHeight() )
 
+        self.startSearchButton.clicked.connect( self.onRefreshingSearch )
+        self.queryInput.keyEnterPressed.connect( self.onRefreshingSearch )
         self._regionCombobox.currentIndexChanged.connect( self.mainAppHandle.onChangingRegion )
         self._settingsButton.clicked.connect( self.showSettingsWindow )
 
@@ -142,6 +163,9 @@ class MainWindow(QWidget):
         self.settingsWin = QPushbulletSettings_Window(self.mainAppHandle)
         self.settingsWin.closeWin.connect( lambda: self.mainAppHandle.onClosingSettingsWindow( self.settingsWin.getPushbulletInstances() ) )
         self.settingsWin.show()
+
+    def onRefreshingSearch(self):
+        self.mainAppHandle.onSubmitNewSearchString()
 
     def addItemToRegionCombobox(self, stringItemToAdd):
         self._regionCombobox.addItem(stringItemToAdd)
@@ -168,7 +192,8 @@ class MainWindow(QWidget):
         return result
 
     def updateItems(self, *newItems):
-        for (item, panel) in zip(newItems, self.itemPanelWidgets):
+        for (item, panel) in zip_longest(newItems, self.itemPanelWidgets):
             log(2, "updateItems - item = {}".format(item))
             panel.updateFromItem(item)
+
         self.updateStatusBar("Last updated at " + datetime.now().strftime("%H:%M") )
