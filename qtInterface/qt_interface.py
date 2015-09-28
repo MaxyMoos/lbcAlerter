@@ -87,7 +87,6 @@ class ItemPanel(QWidget):
                 self.imgWin.show()
             else:
                 # if the user tries to open a second popup of the same item we just focus the existing one
-                debugLog("Setting focus on imgWin")
                 self.imgWin.setFocus()
 
     def onImageDialogClosed(self):
