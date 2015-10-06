@@ -33,9 +33,15 @@ class QImageWindow(QDialog):
         self.closeWinEvent.connect( self.parentWidget().onImageDialogClosed )
 
         # Set up the pixmap by loading first available image
-        self.pixmapImg.loadFromData( self._item.getImagesAsJPEG()[0] )
-        self.pixmapImg  =   self.pixmapImg.scaled(self._imageZone.size(), Qt.KeepAspectRatio)
-        self._imageZone.setPixmap(self.pixmapImg)
+        images = self._item.getImagesAsJPEG()
+        if len(images) > 0:
+            self.pixmapImg.loadFromData( self._item.getImagesAsJPEG()[0] )
+            self.pixmapImg  =   self.pixmapImg.scaled(self._imageZone.size(), Qt.KeepAspectRatio)
+            self._imageZone.setPixmap(self.pixmapImg)
+        else:
+            # Disable next/previous buttons
+            self._prevBtn.setEnabled(False)
+            self._nextBtn.setEnabled(False)
 
         self.resize(500,500)
         self.setWindowTitle(self._item.title + " - Images")

@@ -57,7 +57,7 @@ class MainApplication(QObject):
             try:
                 mainApp.refreshMainWindow()
             except Exception as e:
-                log(0, e.args)
+                log(0, "t_UpdateItems : " + e.args[0])
             finally:
                 getImagesThread = MainApplication.t_getImages()
                 getImagesThread.start()
@@ -73,14 +73,17 @@ class MainApplication(QObject):
 
         def run(self):
             for itemWidget in mainApp.mainWin.itemPanelWidgets:
+                hasImages = False
                 curItem = itemWidget.getItem()
                 if curItem and len(curItem.images) == 0:
                     imgURLs = parser.getAndParseItemPage(curItem.url)
                     for url in imgURLs:
                         imgFile = requests.get(url)
                         curItem.images += [base64.b16encode(imgFile.content)]
-                    self.writeToDBThreads += [MainApplication.t_saveImagesToDB(itemWidget)]
-                    self.writeToDBThreads[-1].start()
+                        hasImages = True
+                    if hasImages:
+                        self.writeToDBThreads += [MainApplication.t_saveImagesToDB(itemWidget)]
+                        self.writeToDBThreads[-1].start()
 
 
     # *****************************************************

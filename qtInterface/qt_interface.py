@@ -69,7 +69,8 @@ class ItemPanel(QWidget):
         # Widgets setup
         self.itemTitle.setTextFormat(Qt.RichText)
         self.itemTitle.setOpenExternalLinks(True)
-        self._hider.hide(self._imagesBtn) # Button only shown when images are available
+        self._imagesBtn.setEnabled(False)
+        # self._hider.hide(self._imagesBtn) # Button only shown when images are available
         self._imagesBtn.clicked.connect( lambda: self.openImageDialog(self._item) )
 
         # Add to layout
@@ -106,12 +107,12 @@ class ItemPanel(QWidget):
             self.itemDate.setText(lbcItem.get_date_string())
             self.itemPrice.setText(lbcItem.price)
         self._imagesBtn.setEnabled(False)
-        self._hider.hide(self._imagesBtn)
+        #self._hider.hide(self._imagesBtn)
 
     def setImageButtonVisibility(self, mustBeVisible):
         if mustBeVisible:
             self._imagesBtn.setEnabled(True)
-            self._hider.unhide(self._imagesBtn)
+            # self._hider.unhide(self._imagesBtn)
 
 
 class SearchButton(QPushButton):
