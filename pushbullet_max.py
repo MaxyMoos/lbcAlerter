@@ -103,6 +103,10 @@ class Pushbullet():
         if not deviceIden in self.sendlist:
             self.sendlist += [deviceIden]
 
+    def removeDeviceFromSendlist(self, deviceIden):
+        if deviceIden in self.sendlist:
+            self.sendlist.remove(deviceIden)
+
     def sendLinkToDevicesInSendlist(self, title="", body="", url="", lbcItem=None):
         if lbcItem is not None:
             _title  =   lbcItem.getTitle()

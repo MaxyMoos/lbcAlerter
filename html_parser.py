@@ -50,9 +50,9 @@ def getDate(dateElement):
                     'juillet'   :   7,
                     'août'      :   8,
                     'sept'      :   9,
-                    'octobre'   :   10,
-                    'novembre'  :   11,
-                    'décembre'  :   12
+                    'oct'       :   10,
+                    'nov'       :   11,
+                    'dec'       :   12
                 }
 
     if dateElement:
@@ -93,10 +93,28 @@ def parseDivElement(elem):
         itemID = -1
     return lbc_item( itemId=itemID, title=title, price=price, date=date, url=url, images=images )
 
+def convertSpecialCharToHTML(text):
+    from html.entities import codepoint2name
+    resultStr = text
+    for key, value in codepoint2name.items():
+        if chr(key) in text:
+            resultStr = text.replace(chr(key), "&" + value + ";")
+    return resultStr
+
+def removeAccentuatedCharacters(text):
+    import unicodedata
+    return unicodedata.normalize('NFD', text).encode('ascii', 'ignore').decode('utf-8')
+
+def formatSearchQueryForRequest(searchQuery):
+    # Unaccented letters lead to same search results, and sending accents in URLs is painful
+    # so we remove them. LBC also replaces whitespaces with '+' characters in URLs
+    resultStr = removeAccentuatedCharacters(searchQuery)
+    resultStr = resultStr.replace(' ', '+')
+    return resultStr
 
 def getItemsFromWebpage( searchQuery="", searchRegion="" ):
     results     =   []
-    url         =   BASE_URL + STANDARD_SUFFIX + REGIONS[searchRegion] + SEARCH_PARAMS + searchQuery.replace(' ','+')
+    url         =   BASE_URL + STANDARD_SUFFIX + REGIONS[searchRegion] + SEARCH_PARAMS + formatSearchQueryForRequest(searchQuery) #searchQuery.replace(' ', '+')
     parsedPage  =   getSoup(url)
     if parsedPage:
         divElements     =   parsedPage.body.find_all( 'div', attrs={'class':'lbc'} )

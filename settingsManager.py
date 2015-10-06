@@ -16,10 +16,8 @@ TAG_PUSHBULLET_ACCOUNTS  =   "Pushbullet accounts"
 
 
 class settingsManager():
-
     def __init__(self):
         self._data  =   {}    #   Holds the contents of the settings file when opened on app launch
-
         try:
             with open(SETTINGS_FILE_PATH) as settingsFile:
                 self._data = json.load( settingsFile )
@@ -53,7 +51,6 @@ class settingsManager():
 
         try:
             for element in self._data[TAG_PUSHBULLET_ACCOUNTS]:
-                log(0, "Loading account from settings : {}".format(element) )
                 accounts += [ Pushbullet(JSON=element) ]
         except KeyError:
             pass # No accounts available in settings file

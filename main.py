@@ -9,6 +9,8 @@ from qtInterface.qt_utilclasses import *
 from lbc_utils import *
 
 import sys
+import requests
+import base64
 from threading import Thread
 
 
@@ -55,7 +57,7 @@ class MainApplication(QObject):
             try:
                 mainApp.refreshMainWindow()
             except Exception as e:
-                log(0, e.args)
+                log(0, "t_UpdateItems : " + e.args[0])
             finally:
                 getImagesThread = MainApplication.t_getImages()
                 getImagesThread.start()
@@ -70,19 +72,28 @@ class MainApplication(QObject):
             self.writeToDBThreads = []
 
         def run(self):
-            for lbcItem in mainApp._displayedItems:
-                if len(lbcItem.images) == 0:
-                    lbcItem.images = parser.getAndParseItemPage(lbcItem.url)
-                    self.writeToDBThreads += [MainApplication.t_saveImagesToDB(lbcItem)]
-                    self.writeToDBThreads[-1].start()
+            for itemWidget in mainApp.mainWin.itemPanelWidgets:
+                hasImages = False
+                curItem = itemWidget.getItem()
+                if curItem and len(curItem.images) == 0:
+                    imgURLs = parser.getAndParseItemPage(curItem.url)
+                    for url in imgURLs:
+                        imgFile = requests.get(url)
+                        curItem.images += [base64.b16encode(imgFile.content)]
+                        hasImages = True
+                    if hasImages:
+                        self.writeToDBThreads += [MainApplication.t_saveImagesToDB(itemWidget)]
+                        self.writeToDBThreads[-1].start()
+
 
     # *****************************************************
     # Thread class to manage images recording into database
     # *****************************************************
     class t_saveImagesToDB(Thread):
-        def __init__(self, lbcItem):
+        def __init__(self, itemWidget):
             super(MainApplication.t_saveImagesToDB, self).__init__()
-            self.lbcItem = lbcItem
+            self.itemWidget = itemWidget
+            self.lbcItem = itemWidget.getItem()
 
         def run(self):
             import os
@@ -90,7 +101,8 @@ class MainApplication(QObject):
             self.dbConn = db.sqlite3.connect(db.DATABASE_NAME, uri=True) # Needed as the sqlite rule is 1 db connection per Thread
             db.insertImagesIntoDatabase(self.dbConn, self.lbcItem)
             self.dbConn.close()
-
+            # Update the widget to display/enable image button
+            self.itemWidget.setImageButtonVisibility(True)
 
     def setPushbulletInstances(self, pbInstances):
         self._pushbulletInstances   =   pbInstances
@@ -109,9 +121,16 @@ class MainApplication(QObject):
     def getSettingsManager(self):
         return self._settingsManager
 
+    def saveSettings(self):
+        self._settingsManager.saveSettings( self.mainWin.queryInput.text(), self.mainWin.getRegionValueFromCombobox(), self.getPushbulletInstances() )
+
+    #   ---------------
+    #   CALLBACKS
+    #   ---------------
     def onSubmitNewSearchString(self):
         self._curSearchQuery = self.mainWin.queryInput.text()
         log( 2, "New search string = {}".format(self._curSearchQuery) )
+        self.saveSettings()
         self.updateItemsThread.restart()
 
     def onChangingRegion(self, newRegionValueIndex):
@@ -121,19 +140,24 @@ class MainApplication(QObject):
     def onClosingSettingsWindow(self, listOfPushbulletAccounts):
         # Callback - We set the active PB accounts and save current state in settings file
         self.setPushbulletInstances(listOfPushbulletAccounts)
-        self._settingsManager.saveSettings(self.mainWin.queryInput.text(), self.mainWin.getRegionValueFromCombobox(), listOfPushbulletAccounts )
+        self.saveSettings()
+
 
     def refreshMainWindow(self):
         newItems = parser.getItemsFromWebpage( self._curSearchQuery, self._curSearchRegion )
         db.insertItemsIntoDatabases(*newItems)      # This method handles duplicates
         self._displayedItems = newItems[0:NB_SHOWN_ITEMS]
+        #   Pad the list - in case we get too few items returned after a new search, this will
+        #   empty the remaining widgets rather than have them display results from the previous search
+        while len(self._displayedItems) < NB_SHOWN_ITEMS:
+            self._displayedItems += [None]
 
         curItems    =   mainApp.mainWin.getItems()
         itemsToNotify = [item for item in self._displayedItems if item not in curItems]
         log( 3, "itemsToNotify = \n{}".format([str(item) + "\n" for item in itemsToNotify]) )
-        mainApp.sendPushbulletNotifications(itemsToNotify)
-        mainApp.mainWin.updateItems( *(self._displayedItems) )
-        mainApp.mainWin.updateStatusBar( "Last updated at " + getCurTimeString() + " - " + str(len(itemsToNotify)) + " new items added!")
+        self.sendPushbulletNotifications(itemsToNotify)
+        self.mainWin.updateItems( *(self._displayedItems) )
+        self.mainWin.updateStatusBar( "Last updated at " + getCurTimeString() + " - " + str(len(itemsToNotify)) + " new items added!")
 
 
     # Application main loop. Everything starts and ends here
@@ -161,10 +185,6 @@ class MainApplication(QObject):
             timer.setSingleShot(True)
             timer.timeout.connect( self.onSubmitNewSearchString )
             timer.start(1000)
-
-        # Connect signals & slots
-        self.mainWin.startSearchButton.clicked.connect( self.onSubmitNewSearchString )
-        self.mainWin.queryInput.keyEnterPressed.connect( self.onSubmitNewSearchString )
 
         self.mainWin.setWindowTitle("LeBonCoin alerter")
         self.mainWin.show()

@@ -8,7 +8,6 @@ from pushbullet_max import Pushbullet
 
 
 class QPushbulletDevice(QWidget):
-
     def __init__(self, pbDevice, parent=None):
         super(QPushbulletDevice, self).__init__(parent)
         self._layout            =   QHBoxLayout()
@@ -20,7 +19,7 @@ class QPushbulletDevice(QWidget):
         self._selectedCheckbox.setCheckState( Qt.Checked if pbDevice.isInSendlist() else Qt.Unchecked )
 
         # Connect signals <-> slots
-        self._selectedCheckbox.toggled.connect( lambda: self.parentWidget().enableNotificationsForDevice(self._pbDevice) )
+        self._selectedCheckbox.toggled.connect( lambda: self.parentWidget().toggleNotificationsForDevice(self._selectedCheckbox.isChecked(), self._pbDevice) )
 
         # Add widgets to layout
         self._layout.addWidget(self._nameLabel)
@@ -40,7 +39,13 @@ class QPushbulletAccount(QWidget):
         self._pbInstance    =   pbInstance
         self._layout        =   QGridLayout()
         self._accountLabel  =   QLabel( "Pushbullet account : " + self._pbInstance.getToken() )
+        self._accountLabel.setStyleSheet("QLabel    {                               \
+                                                        background-color : green;   \
+                                                        color: white                 \
+                                                    }")
         self._devices       =   []
+
+        self._layout.addWidget(self._accountLabel)
 
         self._pbInstance.getDevices()
         for device in self._pbInstance.devices:
@@ -50,13 +55,17 @@ class QPushbulletAccount(QWidget):
 
         self.setLayout(self._layout)
 
-    def enableNotificationsForDevice(self, device):
-        self._pbInstance.addDeviceToSendlist( device.getIden() )
-        log(1, "Device " + str(device) + " added to Pushbullet sendlist")
+    def toggleNotificationsForDevice(self, mustAdd, device):
+        if mustAdd:
+            self._pbInstance.addDeviceToSendlist( device.getIden() )
+            log(1, "Device " + str(device) + " added to Pushbullet sendlist")
+        else:
+            self._pbInstance.removeDeviceFromSendlist( device.getIden() )
+            log(1, "Device " + str(device) + " removed from Pushbullet sendlist")
 
 
 class QPushbulletSettings_Window(QDialog):
-    _pbInstancesGUIElements     =   []  # Handles to the
+    _pbInstancesGUIElements     =   []  # Handles to the widgets
     _pbInstances                =   []
 
     # Signal used to transmit the latest Pushbullet instances to the MainApp handle when closing Settings window
@@ -66,26 +75,26 @@ class QPushbulletSettings_Window(QDialog):
         super(QPushbulletSettings_Window, self).__init__()
         self._mainAppHandle     =   mainAppHandle
         self._layout            =   QGridLayout()
+        self.pbInputTextLabel   =   QLabel("Copy/paste a Pushbullet account token then press Enter:")
         self.pbTokensInputText  =   SearchLineEdit()
 
         # Connect slots<->signals
         self.pbTokensInputText.keyEnterPressed.connect( self.refreshPushbulletTokens )
         # Setup layout
+        self._layout.addWidget(self.pbInputTextLabel)
         self._layout.addWidget(self.pbTokensInputText)
         self.setLayout(self._layout)
 
         # Load current Pushbullet instances from main App handle
         self.setPushbulletInstances( self._mainAppHandle.getPushbulletInstances() )
         self.refreshQPushbulletAccountsShown()
-
+        self.setWindowTitle("Pushbullet settings")
 
     def setPushbulletInstances(self, listOfPushbulletAccounts):
         self._pbInstances = listOfPushbulletAccounts
 
-
     def getPushbulletInstances(self):
         return self._pbInstances
-
 
     def refreshQPushbulletAccountsShown(self):
         # Create a widget per Pushbullet instance available & show it
