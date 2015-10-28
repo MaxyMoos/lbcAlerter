@@ -4,7 +4,8 @@ import base64
 
 
 class lbc_item():
-    def __init__(self, itemId=-1, title="", price=None, date=-1, url="", images=[]):
+    def __init__(self, itemId=-1, title="", price=None,
+                 date=-1, url="", images=[]):
         self.id = itemId
         self.title = title
         if price is None:
@@ -29,9 +30,9 @@ class lbc_item():
 
     def get_date_string(self):
         itemDate = date(self.date.year, self.date.month, self.date.day)
-        if ( itemDate == date.today() ):
+        if (itemDate == date.today()):
             return "Aujourd'hui, " + self.date.strftime("%H:%M")
-        elif ( itemDate == date.today() - timedelta(days=1) ):
+        elif (itemDate == date.today() - timedelta(days=1)):
             return "Hier, " + self.date.strftime("%H:%M")
         else:
             return self.date.strftime("%A %d %B %Y, %H:%M")

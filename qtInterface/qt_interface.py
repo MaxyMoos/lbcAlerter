@@ -9,21 +9,22 @@ from qtInterface.qt_pushbullet import *
 from qtInterface.qt_utilclasses import *
 from qtInterface.imageWindow import *
 
-from datetime import time
 from itertools import zip_longest
 
 
-NB_SHOWN_ITEMS  =   6
+NB_SHOWN_ITEMS = 6
 
 
 # ****************************
 
 class Hider(QObject):
+
     """
     Hides a widget by blocking its paint event. This is useful if a
     widget is in a layout that you do not want to change when the
     widget is hidden.
     """
+
     def __init__(self, parent=None):
         super(Hider, self).__init__(parent)
 
@@ -44,34 +45,37 @@ class Hider(QObject):
 
 
 class ItemPanel(QWidget):
+
     def __init__(self, lbcItem=None):
         super(ItemPanel, self).__init__()
-        self._hider =   Hider()
+        self._hider = Hider()
 
-        self._item      =   lbcItem
-        self.imgWin     =   None
-        self.layout     =   QGridLayout()
-        titleStr    =   ""
-        dateStr     =   ""
-        priceStr    =   ""
+        self._item = lbcItem
+        self.imgWin = None
+        self.layout = QGridLayout()
+        titleStr = ""
+        dateStr = ""
+        priceStr = ""
 
         if lbcItem is not None:
-            titleStr    =   lbcItem.title
-            dateStr     =   lbcItem.get_date_string()
-            priceStr    =   lbcItem.price
+            titleStr = lbcItem.title
+            dateStr = lbcItem.get_date_string()
+            priceStr = lbcItem.price
 
         # Widgets
-        self.itemTitle  =   QLabel(titleStr)
-        self.itemDate   =   QLabel(dateStr)
-        self.itemPrice  =   QLabel(priceStr)
-        self._imagesBtn =   QPushButton("Images", self)
+        self.itemTitle = QLabel(titleStr)
+        self.itemDate = QLabel(dateStr)
+        self.itemPrice = QLabel(priceStr)
+        self._imagesBtn = QPushButton("Images", self)
 
         # Widgets setup
         self.itemTitle.setTextFormat(Qt.RichText)
         self.itemTitle.setOpenExternalLinks(True)
         self._imagesBtn.setEnabled(False)
-        # self._hider.hide(self._imagesBtn) # Button only shown when images are available
-        self._imagesBtn.clicked.connect( lambda: self.openImageDialog(self._item) )
+        # self._hider.hide(self._imagesBtn) # Button only shown when images are
+        # available
+        self._imagesBtn.clicked.connect(
+            lambda: self.openImageDialog(self._item))
 
         # Add to layout
         self.layout.addWidget(self.itemTitle)
@@ -87,7 +91,8 @@ class ItemPanel(QWidget):
                 self.imgWin = QImageWindow(lbcItem, self)
                 self.imgWin.show()
             else:
-                # if the user tries to open a second popup of the same item we just focus the existing one
+                # if the user tries to open a second popup of the same item we
+                # just focus the existing one
                 self.imgWin.setFocus()
 
     def onImageDialogClosed(self):
@@ -103,11 +108,12 @@ class ItemPanel(QWidget):
             self.itemDate.setText("")
             self.itemPrice.setText("")
         else:
-            self.itemTitle.setText("<a href=\"" + lbcItem.url + "\">" + lbcItem.title + "</a>")
+            self.itemTitle.setText(
+                "<a href=\"" + lbcItem.url + "\">" + lbcItem.title + "</a>")
             self.itemDate.setText(lbcItem.get_date_string())
             self.itemPrice.setText(lbcItem.price)
         self._imagesBtn.setEnabled(False)
-        #self._hider.hide(self._imagesBtn)
+        # self._hider.hide(self._imagesBtn)
 
     def setImageButtonVisibility(self, mustBeVisible):
         if mustBeVisible:
@@ -116,34 +122,37 @@ class ItemPanel(QWidget):
 
 
 class SearchButton(QPushButton):
+
     def __init__(self, string):
         super(SearchButton, self).__init__(string)
 
 
 class MainWindow(QDialog):
+
     def __init__(self, mainApp):
         super(MainWindow, self).__init__()
-        self.mainAppHandle      =   mainApp
-        self.layout             =   QGridLayout()
-        self.itemPanelWidgets   =   []
+        self.mainAppHandle = mainApp
+        self.layout = QGridLayout()
+        self.itemPanelWidgets = []
 
         for i in range(0, NB_SHOWN_ITEMS):
             self.itemPanelWidgets += [ItemPanel()]
 
         # Widgets
-        self.queryInput         =   SearchLineEdit("Recherche:")
-        self._regionCombobox    =   QComboBox()
-        self.startSearchButton  =   SearchButton("Rechercher")
-        self._settingsButton    =   QPushButton("Settings", self)
+        self.queryInput = SearchLineEdit("Recherche:")
+        self._regionCombobox = QComboBox()
+        self.startSearchButton = SearchButton("Rechercher")
+        self._settingsButton = QPushButton("Settings", self)
         # Status bar
-        self.statusBar  =   QStatusBar()
+        self.statusBar = QStatusBar()
         self.statusBar.setSizeGripEnabled(False)
-        self.statusBar.setFixedHeight( self.statusBar.minimumHeight() )
+        self.statusBar.setFixedHeight(self.statusBar.minimumHeight())
 
-        self.startSearchButton.clicked.connect( self.onRefreshingSearch )
-        self.queryInput.keyEnterPressed.connect( self.onRefreshingSearch )
-        self._regionCombobox.currentIndexChanged.connect( self.mainAppHandle.onChangingRegion )
-        self._settingsButton.clicked.connect( self.showSettingsWindow )
+        self.startSearchButton.clicked.connect(self.onRefreshingSearch)
+        self.queryInput.keyEnterPressed.connect(self.onRefreshingSearch)
+        self._regionCombobox.currentIndexChanged.connect(
+            self.mainAppHandle.onChangingRegion)
+        self._settingsButton.clicked.connect(self.showSettingsWindow)
 
         # Add widgets to layout
         self.layout.addWidget(self.queryInput)
@@ -161,7 +170,8 @@ class MainWindow(QDialog):
 
     def showSettingsWindow(self):
         self.settingsWin = QPushbulletSettings_Window(self.mainAppHandle)
-        self.settingsWin.closeWin.connect( lambda: self.mainAppHandle.onClosingSettingsWindow( self.settingsWin.getPushbulletInstances() ) )
+        self.settingsWin.closeWin.connect(lambda: self.mainAppHandle.onClosingSettingsWindow(
+            self.settingsWin.getPushbulletInstances()))
         self.settingsWin.show()
 
     def onRefreshingSearch(self):
@@ -173,7 +183,7 @@ class MainWindow(QDialog):
     def removeItemFromCombobox(self, stringItemToRemove):
         indexToRemove = self._regionCombobox.findText(stringItemToRemove)
         if indexToRemove != -1:
-            self._regionCombobox.removeItem( indexToRemove )
+            self._regionCombobox.removeItem(indexToRemove)
 
     def removeAllItemsFromCombobox(self):
         while self._regionCombobox.count > 0:
@@ -188,7 +198,7 @@ class MainWindow(QDialog):
     def getItems(self):
         result = []
         for panel in self.itemPanelWidgets:
-            result += [ panel.getItem() ]
+            result += [panel.getItem()]
         return result
 
     def updateItems(self, *newItems):
@@ -196,4 +206,5 @@ class MainWindow(QDialog):
             log(2, "updateItems - item = {}".format(item))
             panel.updateFromItem(item)
 
-        self.updateStatusBar("Last updated at " + datetime.now().strftime("%H:%M") )
+        self.updateStatusBar(
+            "Last updated at " + datetime.now().strftime("%H:%M"))

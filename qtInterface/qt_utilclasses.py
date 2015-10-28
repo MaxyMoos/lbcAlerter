@@ -9,5 +9,5 @@ class SearchLineEdit(QLineEdit):
 
     def keyPressEvent(self, event):
         super(SearchLineEdit, self).keyPressEvent(event)
-        if ( event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter):
+        if (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter):
             self.keyEnterPressed.emit()
