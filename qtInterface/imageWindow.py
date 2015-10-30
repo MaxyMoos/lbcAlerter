@@ -24,20 +24,24 @@ class QImageWindow(QDialog):
         super(QImageWindow, self).__init__(parent)
         self.displayedImgIndex = 0
         self._item = lbcItem
+
+        # Set up widgets
         self._layout = QVBoxLayout()
         self._imageZone = QLabel()
         self.pixmapImg = QPixmap()
+        self.imgIndexText = QLabel()
         self._navButtons = QImageNavButtons()
         self._prevBtn = self._navButtons._prevButton
         self._nextBtn = self._navButtons._nextButton
 
+        # Connect signals/slots
         self._prevBtn.clicked.connect(lambda: self.showNextOrPrevImage(-1))
         self._nextBtn.clicked.connect(lambda: self.showNextOrPrevImage(1))
         self.closeWinEvent.connect(self.parentWidget().onImageDialogClosed)
 
         # Set up the pixmap by loading first available image
         images = self._item.getImagesAsJPEG()
-        if len(images) > 0:
+        if len(images) > 1:
             self.pixmapImg.loadFromData(self._item.getImagesAsJPEG()[0])
             self.pixmapImg = self.pixmapImg.scaled(
                 self._imageZone.size(), Qt.KeepAspectRatio)
@@ -47,11 +51,17 @@ class QImageWindow(QDialog):
             self._prevBtn.setEnabled(False)
             self._nextBtn.setEnabled(False)
 
+        self.imgIndexText.setText(str(self.displayedImgIndex + 1) \
+                                  + " / " \
+                                  + str(len(self._item.images)))
+        self.imgIndexText.setAlignment(Qt.AlignHCenter)
         self.resize(500, 500)
         self.setWindowTitle(self._item.title + " - Images")
         self._layout.addWidget(
-            self._imageZone, Qt.AlignHCenter | Qt.AlignVCenter)
+            self._imageZone)
+        self._layout.addWidget(self.imgIndexText)
         self._layout.addWidget(self._navButtons, Qt.AlignHCenter)
+        self._layout.setAlignment(Qt.AlignHCenter)
         self.setLayout(self._layout)
 
     def setAndRefreshPixmapWithImage(self, imageData):
@@ -64,6 +74,9 @@ class QImageWindow(QDialog):
         # nextOrPrev value is -1 or 1
         self.displayedImgIndex = (
             self.displayedImgIndex + nextOrPrev) % len(self._item.images)
+        self.imgIndexText.setText(str(self.displayedImgIndex + 1) \
+                                  + " / " \
+                                  + str(len(self._item.images)))
         self.setAndRefreshPixmapWithImage(
             self._item.getImagesAsJPEG()[self.displayedImgIndex])
 

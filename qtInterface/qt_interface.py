@@ -148,11 +148,13 @@ class MainWindow(QDialog):
         self.statusBar.setSizeGripEnabled(False)
         self.statusBar.setFixedHeight(self.statusBar.minimumHeight())
 
+        # Connect signals/slots
         self.startSearchButton.clicked.connect(self.onRefreshingSearch)
         self.queryInput.keyEnterPressed.connect(self.onRefreshingSearch)
         self._regionCombobox.currentIndexChanged.connect(
             self.mainAppHandle.onChangingRegion)
         self._settingsButton.clicked.connect(self.showSettingsWindow)
+
 
         # Add widgets to layout
         self.layout.addWidget(self.queryInput)
@@ -163,10 +165,12 @@ class MainWindow(QDialog):
             self.layout.addWidget(widget)
             HLine = QFrame()
             HLine.setFrameStyle(QFrame.HLine)
-            self.layout.addWidget(HLine)
+            if widget is not self.itemPanelWidgets[-1]:
+                self.layout.addWidget(HLine)
         self.layout.addWidget(self.statusBar)
 
         self.setLayout(self.layout)
+        self.startSearchButton.setFocus()
 
     def showSettingsWindow(self):
         self.settingsWin = QPushbulletSettings_Window(self.mainAppHandle)
