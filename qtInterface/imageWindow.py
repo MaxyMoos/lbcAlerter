@@ -41,12 +41,12 @@ class QImageWindow(QDialog):
 
         # Set up the pixmap by loading first available image
         images = self._item.getImagesAsJPEG()
-        if len(images) > 1:
-            self.pixmapImg.loadFromData(self._item.getImagesAsJPEG()[0])
+        if len(images) > 0:
+            self.pixmapImg.loadFromData(images[0])
             self.pixmapImg = self.pixmapImg.scaled(
                 self._imageZone.size(), Qt.KeepAspectRatio)
             self._imageZone.setPixmap(self.pixmapImg)
-        else:
+        if len(images) == 1:
             # Disable next/previous buttons
             self._prevBtn.setEnabled(False)
             self._nextBtn.setEnabled(False)
@@ -66,8 +66,6 @@ class QImageWindow(QDialog):
 
     def setAndRefreshPixmapWithImage(self, imageData):
         self.pixmapImg.loadFromData(imageData)
-        self.pixmapImg = self.pixmapImg.scaled(
-            self._imageZone.size(), Qt.KeepAspectRatio)
         self._imageZone.setPixmap(self.pixmapImg)
 
     def showNextOrPrevImage(self, nextOrPrev):
@@ -79,6 +77,13 @@ class QImageWindow(QDialog):
                                   + str(len(self._item.images)))
         self.setAndRefreshPixmapWithImage(
             self._item.getImagesAsJPEG()[self.displayedImgIndex])
+
+    def keyPressEvent(self, event):
+        # WORKAROUND: [Win10] Esc closes the imageWindow *without*
+        # calling closeEvent
+        if event.key() != Qt.Key_Escape:
+            super().keyPressEvent(event)
+
 
     def closeEvent(self, event):
         self.closeWinEvent.emit()
