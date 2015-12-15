@@ -55,7 +55,7 @@ class Pushbullet():
         self.sendlist = []
 
         if JSON is not None:
-            self._pushbulletToken = JSON["_pushbulletToken"]
+            self.pushbulletToken = JSON["_pushbulletToken"]
             for deviceJSON in JSON["devices"]:
                 self.devices += [
                     Pushbullet.PushbulletDevice(JSON=deviceJSON, Account=self)]
@@ -63,7 +63,7 @@ class Pushbullet():
                     str(self.devices[-1]))
             self.sendlist = JSON["sendlist"]
         elif pb_token is not None:
-            self._pushbulletToken = pb_token
+            self.pushbulletToken = pb_token
         else:
             raise ValueError("Cannot initialize a Pushbullet object with \
                 no Token or no JSON data")
@@ -71,37 +71,52 @@ class Pushbullet():
         # Session object must always be initialized
         self.curSession = requests.session()
         self.curSession.headers.update(self.JSON_HEADER)
-        authParam = "Bearer " + self._pushbulletToken
+        authParam = "Bearer " + self.pushbulletToken
         self.curSession.headers.update({"Authorization": authParam})
+        if not self.isTokenValid():
+            raise ValueError("Invalid token (\"{}\")".format(self.pushbulletToken))
+
 
     def __eq__(self, other):
-        return self._pushbulletToken == other._pushbulletToken and self.getDevices() == other.getDevices()
+        return self.pushbulletToken == other.pushbulletToken and self.getDevices() == other.getDevices()
 
     def __str__(self):
-        result = "Token = " + self._pushbulletToken + "\n"
+        result = "Token = " + self.pushbulletToken + "\n"
         self.getDevices()
         result += "\n".join([str(device) + "\n" for device in self.devices])
         return result
 
     def getToken(self):
-        return self._pushbulletToken
+        return self.pushbulletToken
+
+    def isTokenValid(self):
+        response = self.curSession.get(self.PB_URL_ME)
+        if response.status_code == 401:
+            return False
+        else:
+            return True
 
     def getDevices(self, forceRefresh=False):
         if len(self.devices) == 0 or forceRefresh:
             try:
                 response = self.curSession.get(self.PB_URL_DEVICES)
-                if (response.status_code != 200):
+                if response.status_code == 401:
+                    # Token is not a valid Pushbullet token
+                    log(1, "Error: invalid token ({})".format(self.pushbulletToken))
+                    return -3
+                elif response.status_code != 200:
                     log(1, "Error during getDevices request - HTTP " +
                         str(response.status_code))
-                    return None
+                    return -2
                 else:
                     for device in response.json()['devices']:
                         self.devices += [
                             self.PushbulletDevice(device, Account=self)]
-                    return response.json()['devices']
+                        return None
+                    # return response.json()['devices'] # Really necessary ?
             except Exception as e:
                 log(0, e.args)
-                return None
+                return -1
 
     def addDeviceToSendlist(self, deviceIden):
         if deviceIden not in self.sendlist:

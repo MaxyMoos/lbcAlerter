@@ -52,6 +52,8 @@ class QPushbulletAccount(QWidget):
             self.layout.addWidget(self.accountLabel)
             self.layout.addWidget(self.removeAccountButton)
             self.setLayout(self.layout)
+ 
+
 
     def __init__(self, pbInstance, parent=None):
         super(QPushbulletAccount, self).__init__(parent)
@@ -61,22 +63,6 @@ class QPushbulletAccount(QWidget):
         self._layout = QGridLayout()
         self.headlineWidget = self.QPbAccountHeadline(self._pbInstance.getToken(), self)
         self._layout.addWidget(self.headlineWidget)
-        """
-        self._accountLabel = QLabel(
-            "Pushbullet account : " + self._pbInstance.getToken())
-        self._accountLabel.setStyleSheet("QLabel { \
-                                                    background-color : green; \
-                                                    color: white \
-                                                 }")
-        self._removeAccountButton = QPushButton("Remove")
-
-        self._accountHeadlineWidget = QHBoxLayout()
-        self._accountHeadlineWidget.addWidget(self._accountLabel)
-        self._accountHeadlineWidget.addWidget(self._removeAccountButton)
-
-        self._layout.addWidget(self._accountHeadlineWidget)
-        # self._layout.addWidget(self._accountLabel)
-        """
 
         self._pbInstance.getDevices()
         for device in self._pbInstance.devices:
@@ -85,6 +71,17 @@ class QPushbulletAccount(QWidget):
             self._devices += [newDev]
 
         self.setLayout(self._layout)
+
+    def delete(self):
+        self._pbInstance = None
+        self._devices = []
+        while self._layout.takeAt(0) != None:
+            item = self._layout.takeAt(0)
+            item.widget = None
+            item = None
+        self.headlineWidget.delete()
+        self.headlineWidget = None
+
 
     def toggleNotificationsForDevice(self, mustAdd, device):
         if mustAdd:
@@ -102,10 +99,12 @@ class QPushbulletSettings_Window(QDialog):
     # handle when closing Settings window
     closeWin = pyqtSignal()
 
+
     def __init__(self, mainAppHandle):
         super(QPushbulletSettings_Window, self).__init__()
-        self._pbInstancesGUIElements = []  # Handles to the widgets
+        self._pbInstancesWidgets = []  # Handles to the widgets
         self._pbInstances = []
+
         self._mainAppHandle = mainAppHandle
         self._layout = QGridLayout()
         self.pbInputTextLabel = QLabel(
@@ -126,39 +125,49 @@ class QPushbulletSettings_Window(QDialog):
         self.refreshQPushbulletAccountsShown()
         self.setWindowTitle("Pushbullet settings")
 
+
     def setPushbulletInstances(self, listOfPushbulletAccounts):
         self._pbInstances = listOfPushbulletAccounts
 
+
     def getPushbulletInstances(self):
         return self._pbInstances
+
 
     def removeAccount(self, accountToken):
         for pbInstance in self._pbInstances:
             if pbInstance.getToken() == accountToken:
                 self._pbInstances.remove(pbInstance)
-                for pbAccountWidget in self._pbInstancesGUIElements:
-                    if pbAccountWidget._pbInstance.getToken == accountToken:
-                        # Howwwwww
-                        self._pbInstancesGUIElements.remove(pbAccountWidget)
-                        self._layout.removeWidget(pbAccountWidget)
-                break
+                for pbAccountWidget in self._pbInstancesWidgets:
+                    if pbAccountWidget._pbInstance.getToken() == accountToken:
+                        self._pbInstancesWidgets.remove(pbAccountWidget)
+                        pbAccountWidget.setParent(None)
+                        break
         self.refreshQPushbulletAccountsShown()
+
 
     def refreshQPushbulletAccountsShown(self):
         # Create a widget per Pushbullet instance available & show it
         for curPbInstance in self._pbInstances:
             tmpAccount = QPushbulletAccount(curPbInstance, parent=self)
-            self._pbInstancesGUIElements += [tmpAccount]
+            self._pbInstancesWidgets += [tmpAccount]
             self._layout.addWidget(tmpAccount)
             self.setLayout(self._layout)
+        # Hack: next line necessary if resize call is to work
+        QCoreApplication.processEvents()
+        self.resize(self.minimumSizeHint())
+
 
     def refreshPushbulletTokens(self):
         new_tokens = self.pbTokensInputText.text().split(';')
         for token in new_tokens:
-            print("token = {}".format(token))
             if token not in [instance.getToken() for instance in self._pbInstances]:
-                self._pbInstances += [Pushbullet(token)]
+                try:
+                    self._pbInstances += [Pushbullet(token)]
+                except ValueError as e:
+                    print(e)
         self.refreshQPushbulletAccountsShown()
+
 
     def closeEvent(self, event):
         self.closeWin.emit()
