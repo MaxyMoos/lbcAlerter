@@ -50,7 +50,7 @@ def getDate(dateElement):
         'sept':         9,
         'oct':          10,
         'nov':          11,
-        'dec':          12
+        'déc':          12
     }
 
     if dateElement:
