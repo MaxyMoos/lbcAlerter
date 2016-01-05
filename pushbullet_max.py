@@ -55,7 +55,7 @@ class Pushbullet():
         self.sendlist = []
 
         if JSON is not None:
-            self.pushbulletToken = JSON["_pushbulletToken"]
+            self.pushbulletToken = JSON["pushbulletToken"]
             for deviceJSON in JSON["devices"]:
                 self.devices += [
                     Pushbullet.PushbulletDevice(JSON=deviceJSON, Account=self)]

@@ -50,5 +50,6 @@ class settingsManager():
             for element in self._data[TAG_PUSHBULLET_ACCOUNTS]:
                 accounts += [Pushbullet(JSON=element)]
         except KeyError:
+            print("No accounts found in settings file")
             pass  # No accounts available in settings file
         return accounts

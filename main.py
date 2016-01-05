@@ -198,7 +198,7 @@ class MainApplication(QObject):
             self.mainWin.queryInput.setText(searchQuery)
             timer = QTimer()
             timer.setSingleShot(True)
-            timer.timeout.connect(self.onSubmitNewSearchString)
+            timer.timeout.connect(self.updateItemsThread.restart)
             timer.start(1000)
 
         self.mainWin.setWindowTitle("LeBonCoin alerter")
