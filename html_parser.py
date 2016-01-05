@@ -39,13 +39,13 @@ def getSoup(url):
 # @Return_Format: datetime instance
 def getDate(dateElement):
     monthsInfo = {
-        'janvier':      1,
-        'février':      2,
-        'mars':         3,
-        'avril':        4,
+        'jan':          1,
+        'fév':          2,
+        'mar':          3,
+        'avr':          4,
         'mai':          5,
         'juin':         6,
-        'juillet':      7,
+        'juil':         7,
         'août':         8,
         'sept':         9,
         'oct':          10,
