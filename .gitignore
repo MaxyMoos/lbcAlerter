@@ -3,6 +3,7 @@ tests/
 tmp/
 UserSettings.json
 file
+NOGIT_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -80,14 +80,15 @@ class MainApplication(QObject):
                 curItem = itemWidget.getItem()
                 if curItem and len(curItem.images) == 0:
                     imgURLs = parser.getAndParseItemPage(curItem.url)
-                    for url in imgURLs:
-                        imgFile = requests.get(url)
-                        curItem.images += [base64.b16encode(imgFile.content)]
-                        hasImages = True
-                    if hasImages:
-                        self.writeToDBThreads += [
-                            MainApplication.t_saveImagesToDB(itemWidget)]
-                        self.writeToDBThreads[-1].start()
+                    if imgURLs is not None:
+                        for url in imgURLs:
+                            imgFile = requests.get(url)
+                            curItem.images += [base64.b16encode(imgFile.content)]
+                            hasImages = True
+                        if hasImages:
+                            self.writeToDBThreads += [
+                                MainApplication.t_saveImagesToDB(itemWidget)]
+                            self.writeToDBThreads[-1].start()
 
     # *****************************************************
     # Thread class to manage images recording into database

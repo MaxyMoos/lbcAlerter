@@ -174,6 +174,7 @@ class MainWindow(QDialog):
 
     def showSettingsWindow(self):
         self.settingsWin = QPushbulletSettings_Window(self.mainAppHandle)
+        self.settingsWin.setModal(True)
         self.settingsWin.closeWin.connect(lambda: self.mainAppHandle.onClosingSettingsWindow(
             self.settingsWin.getPushbulletInstances()))
         self.settingsWin.show()

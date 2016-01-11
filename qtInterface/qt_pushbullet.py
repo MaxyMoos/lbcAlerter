@@ -124,6 +124,15 @@ class QPushbulletSettings_Window(QDialog):
             self._mainAppHandle.getPushbulletInstances())
         self.refreshQPushbulletAccountsShown()
         self.setWindowTitle("Pushbullet settings")
+        """
+            BUGFIX 11/01/2016 - If focus not set manually AND using a QDialog,
+                                focus is also made on the first button of the layout.
+                                In this case, the "Remove" button of the first account.
+                                => When adding a 2nd account, you usually deleted the 1st
+
+                                Other solution: using a QWidget instead of QDialog
+        """
+        self.pbTokensInputText.setFocus()
 
 
     def setPushbulletInstances(self, listOfPushbulletAccounts):
@@ -149,10 +158,11 @@ class QPushbulletSettings_Window(QDialog):
     def refreshQPushbulletAccountsShown(self):
         # Create a widget per Pushbullet instance available & show it
         for curPbInstance in self._pbInstances:
-            tmpAccount = QPushbulletAccount(curPbInstance, parent=self)
-            self._pbInstancesWidgets += [tmpAccount]
-            self._layout.addWidget(tmpAccount)
-            self.setLayout(self._layout)
+            if not curPbInstance.getToken() in [widget._pbInstance.getToken() for widget in self._pbInstancesWidgets]:
+                tmpAccount = QPushbulletAccount(curPbInstance, parent=self)
+                self._pbInstancesWidgets += [tmpAccount]
+                self._layout.addWidget(tmpAccount)
+                self.setLayout(self._layout)
         # Hack: next line necessary if resize call is to work
         QCoreApplication.processEvents()
         self.resize(self.minimumSizeHint())
