@@ -47,6 +47,7 @@ class MainApplication(QObject):
 
         def __init__(self):
             super(MainApplication.t_UpdateItems, self).__init__()
+            self.imgThreadHandle = MainApplication.t_getImages()
             self.timer = QTimer()
             self.timer.setSingleShot(True)
             self.timer.timeout.connect(self.run)
@@ -55,14 +56,17 @@ class MainApplication(QObject):
             self.timer.stop()
             self.run()
 
+        def is_alive(self):
+            return super().is_alive() or self.imgThreadHandle.is_alive()
+
         def run(self):
+            log(1, "Updating items...")
             try:
                 mainApp.refreshMainWindow()
             except Exception as e:
                 log(0, "t_UpdateItems : " + e.args[0])
             finally:
-                getImagesThread = MainApplication.t_getImages()
-                getImagesThread.start()
+                self.imgThreadHandle.start()
                 self.timer.start(60000)
 
     # ***************************************
@@ -73,6 +77,10 @@ class MainApplication(QObject):
         def __init__(self):
             super(MainApplication.t_getImages, self).__init__()
             self.writeToDBThreads = []
+
+        def is_alive(self):
+            isOneDBthreadAlive = True in [thread.is_alive() for thread in self.writeToDBThreads]
+            return super().is_alive() or isOneDBthreadAlive
 
         def run(self):
             for itemWidget in mainApp.mainWin.itemPanelWidgets:

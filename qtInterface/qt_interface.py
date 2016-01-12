@@ -172,6 +172,12 @@ class MainWindow(QDialog):
         self.setLayout(self.layout)
         self.startSearchButton.setFocus()
 
+    def closeEvent(self, event):
+        while(self.mainAppHandle.updateItemsThread.is_alive()):
+            pass
+        log(1, "We have waited for thread completion. Exiting now...")
+        event.accept
+
     def showSettingsWindow(self):
         self.settingsWin = QPushbulletSettings_Window(self.mainAppHandle)
         self.settingsWin.setModal(True)
