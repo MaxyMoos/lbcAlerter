@@ -9,17 +9,18 @@ from lbc_item import *
 
 import re
 from datetime import datetime, timedelta
+from collections import OrderedDict
 
 
-BASE_URL = "http://www.leboncoin.fr"
+BASE_URL        = "http://www.leboncoin.fr"
 STANDARD_SUFFIX = "/annonces/offres"
 
 # TODO - Add remaining region choices in this dict
-REGIONS = {
-    'France':   '/occasions/',
-    'Paris':   '/ile_de_france/paris/',
-    'Île-de-France':   '/ile_de_france/'
-}
+REGIONS = OrderedDict([     ('France', '/occasions/'),
+                            ('Paris', '/ile_de_france/paris/'),
+                            ('Île-de-France',   '/ile_de_france/'),
+                            ('Alsace',   '/alsace')
+                       ])
 
 # th=0 disables thumbnails so the html response is as small as possible
 SEARCH_PARAMS = "?f=a&th=0&q="

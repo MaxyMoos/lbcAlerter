@@ -47,7 +47,7 @@ class MainApplication(QObject):
 
         def __init__(self):
             super(MainApplication.t_UpdateItems, self).__init__()
-            self.imgThreadHandle = MainApplication.t_getImages()
+            self.imgThreadHandle = None
             self.timer = QTimer()
             self.timer.setSingleShot(True)
             self.timer.timeout.connect(self.run)
@@ -66,6 +66,7 @@ class MainApplication(QObject):
             except Exception as e:
                 log(0, "t_UpdateItems : " + e.args[0])
             finally:
+                self.imgThreadHandle = MainApplication.t_getImages()
                 self.imgThreadHandle.start()
                 self.timer.start(60000)
 
@@ -196,7 +197,7 @@ class MainApplication(QObject):
         self.updateItemsThread = self.t_UpdateItems()
 
         # Initialize "Region" combobox with values
-        for region in sorted(parser.REGIONS.keys()):
+        for region in parser.REGIONS.keys():
             self.mainWin.addItemToRegionCombobox(region)
 
         # Init search from UserSettings config file if available
