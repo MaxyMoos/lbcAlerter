@@ -11,6 +11,7 @@ from lbc_utils import *
 import sys
 import requests
 import base64
+import os.path
 from threading import Thread
 
 
@@ -194,6 +195,8 @@ class MainApplication(QObject):
 
         # Let's get some handles
         self.mainWin = MainWindow(self)
+        if os.path.exists("./resources/favicon.ico"):
+            self.mainWin.setWindowIcon(QIcon("./resources/favicon.ico"))
         self.updateItemsThread = self.t_UpdateItems()
 
         # Initialize "Region" combobox with values
