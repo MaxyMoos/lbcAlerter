@@ -4,6 +4,7 @@ tmp/
 UserSettings.json
 file
 NOGIT_*
+resources/official.ico
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
