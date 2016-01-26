@@ -151,8 +151,7 @@ class MainApplication(QObject):
         self.updateItemsThread.restart()
 
     def onChangingRegion(self, newRegionValueIndex):
-        self._curSearchRegion = sorted(
-            parser.REGIONS.keys())[newRegionValueIndex]
+        self._curSearchRegion = list(parser.REGIONS.keys())[newRegionValueIndex]
         log(2, "New region value : {}".format(self._curSearchRegion))
 
     def onClosingSettingsWindow(self, listOfPushbulletAccounts):

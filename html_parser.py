@@ -27,6 +27,7 @@ SEARCH_PARAMS = "?f=a&th=0&q="
 
 
 def getSoup(url):
+    log(2, "html_parser.py::getSoup() - Sending request to URL : {}".format(url))
     try:
         f = urlopen(url)
     except Exception:
