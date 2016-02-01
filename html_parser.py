@@ -88,7 +88,7 @@ def parseDivElement(elem):
     if price:
         price = price.string.strip()
     date = getDate(elem.find("div", attrs={'class': 'date'}))
-    url = elem.parent['href']
+    url = "http:" + elem.parent['href']
     images = []
 
     itemID_regex = re.search("[0-9]+(?=\.htm)", url)
@@ -155,13 +155,16 @@ def getAndParseItemPage(itemURL):
     images = []
 
     soup = getSoup(itemURL)
-
     if soup:
         x = soup.body.find_all("meta", attrs={'itemprop': 'image'})
         for elem in x:
             try:
-                images += [elem['content']]
+                url_regex = re.search("\/\/img.*.jpg", elem['content'])
+                if url_regex:
+                    # What we get from url_regex is the thumbnail URL
+                    # But the original image is almost at the same URL!
+                    url = url_regex.group().replace("thumbs", "images")
+                    images += ["http:" + url]
             except Exception:
-                log(1, "Error while parsing the following object:\n{}".format(
-                    elem))
+                log(1, "Error while parsing object:\n{}".format(elem))
         return images
